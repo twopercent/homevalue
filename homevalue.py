@@ -21,20 +21,52 @@ config = configparser.ConfigParser()
 #config.read_file(open('homevalue.ini'))
 config.read('homevalue.ini')
 
+def get_zillow_estimate_iter_test():
+    key = config.get('zillow', 'api_key')
+    houseCode = config.get('zillow', 'property_id')
+    
+    request = urllib.request.urlopen(zillow_service + "?zws-id=" + key + "&zpid=" + houseCode)
+    data = request.read()
+    
+    f = open('housedata.xml', 'wb')
+    f.write(data)
+    f.close()
+
+    #ET.parse() creates an ElementTree
+    tree1 = ET.parse('housedata.xml')
+    root = tree1.getroot()
+
+    #ET.fromstring() creats an Element
+    #this element is equivalent to the root of the above ElementTree
+    tree2 = ET.fromstring(data)
+
+    print("Tree1: " + str(type(tree1)))
+    print("Tree2: " + str(type(tree2)))
+    
+    print()
+    print(ET.tostring(root))
+    
+
+    for element in root:
+        print(element.tag)
+        for child in element:
+            print(child.tag, child.attrib, child.text)
+    
+    print()
+    print("now the iter")
+    for value in root.iter('amount'):
+        print(value.text)
+
 def get_zillow_estimate():
     key = config.get('zillow', 'api_key')
     houseCode = config.get('zillow', 'property_id')
     
     request = urllib.request.urlopen(zillow_service + "?zws-id=" + key + "&zpid=" + houseCode)
     data = request.read()
-    f = open('housedata.xml', 'wb')
-    f.write(data)
-    f.close()
+    
+    root = ET.fromstring(data)
 
-    tree = ET.parse('housedata.xml')
-    root = tree.getroot()
-
-    for element in root:
-        print(element.tag, element.attrib)
+    for amount in root.iter('amount'):
+        print("Home value: " + str(amount.text))
 
 get_zillow_estimate()
