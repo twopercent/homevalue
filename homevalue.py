@@ -1,4 +1,4 @@
-#!/usr/bin/python3.4
+#!/usr/bin/env python3
 #
 # 09/23/2015
 #
@@ -10,7 +10,9 @@
 import os
 import configparser
 import urllib.request
+import requests
 import xml.etree.ElementTree as ET
+from lxml import html
 
 zillow_service = 'http://www.zillow.com/webservice/GetZestimate.htm'
 trulia_service = 'http://api.trulia.com/webservices.php'
@@ -67,6 +69,17 @@ def get_zillow_estimate():
     root = ET.fromstring(data)
 
     for amount in root.iter('amount'):
-        print("Home value: " + str(amount.text))
+        print("Zillow: " + str(amount.text))
+
+def get_trulia_estimate():
+    url = config.get('trulia', 'home_url')
+
+    page = requests.get(url)
+    tree = html.fromstring(page.content)
+
+    value = tree.xpath('//span[@itemprop="price"]/text()')
+
+    print("Trulia: "+ str(value[0]))
 
 get_zillow_estimate()
+get_trulia_estimate()
